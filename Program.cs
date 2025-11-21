@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -56,12 +57,50 @@ class Program
             {
                 using (var stream = System.IO.File.OpenRead(filePath))
                 {
-                    // Using InputFile.FromStream for modern Telegram.Bot versions
-                    await botClient.SendDocument(
-                        chatId: groupId,
-                        document: InputFile.FromStream(stream, fileName),
-                        caption: caption
-                    );
+                    string extension = fileInfo.Extension.ToLowerInvariant();
+                    var inputFile = InputFile.FromStream(stream, fileName);
+
+                    if (IsImage(extension))
+                    {
+                        await botClient.SendPhoto(
+                            chatId: groupId,
+                            photo: inputFile,
+                            caption: caption
+                        );
+                    }
+                    else if (IsAnimation(extension))
+                    {
+                        await botClient.SendAnimation(
+                            chatId: groupId,
+                            animation: inputFile,
+                            caption: caption
+                        );
+                    }
+                    else if (IsVideo(extension))
+                    {
+                        await botClient.SendVideo(
+                            chatId: groupId,
+                            video: inputFile,
+                            caption: caption
+                        );
+                    }
+                    else if (IsAudio(extension))
+                    {
+                        await botClient.SendAudio(
+                            chatId: groupId,
+                            audio: inputFile,
+                            caption: caption
+                        );
+                    }
+                    else
+                    {
+                        // Using InputFile.FromStream for modern Telegram.Bot versions
+                        await botClient.SendDocument(
+                            chatId: groupId,
+                            document: inputFile,
+                            caption: caption
+                        );
+                    }
                 }
                 Console.WriteLine("Sent successfully.");
             }
@@ -86,4 +125,16 @@ class Program
         Console.Write(prompt);
         return Console.ReadLine()?.Trim() ?? string.Empty;
     }
+
+    static bool IsImage(string extension) =>
+        new[] { ".jpg", ".jpeg", ".png", ".bmp", ".webp" }.Contains(extension);
+
+    static bool IsAnimation(string extension) =>
+        new[] { ".gif" }.Contains(extension);
+
+    static bool IsVideo(string extension) =>
+        new[] { ".mp4", ".avi", ".mov", ".mkv", ".webm" }.Contains(extension);
+
+    static bool IsAudio(string extension) =>
+        new[] { ".mp3", ".wav", ".ogg", ".m4a", ".flac" }.Contains(extension);
 }
