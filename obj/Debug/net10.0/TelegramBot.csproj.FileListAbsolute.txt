@@ -15,6 +15,7 @@ D:\repos\TelegramBot\obj\Debug\net10.0\TelegramBot.GeneratedMSBuildEditorConfig.
 D:\repos\TelegramBot\obj\Debug\net10.0\TelegramBot.AssemblyInfoInputs.cache
 D:\repos\TelegramBot\obj\Debug\net10.0\TelegramBot.AssemblyInfo.cs
 D:\repos\TelegramBot\obj\Debug\net10.0\TelegramBot.csproj.CoreCompileInputs.cache
+D:\repos\TelegramBot\obj\Debug\net10.0\TelegramBot.sourcelink.json
 D:\repos\TelegramBot\obj\Debug\net10.0\Telegram.C5E56D06.Up2Date
 D:\repos\TelegramBot\obj\Debug\net10.0\TelegramBot.dll
 D:\repos\TelegramBot\obj\Debug\net10.0\refint\TelegramBot.dll
