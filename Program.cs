@@ -81,7 +81,8 @@ class Program
                         await botClient.SendVideo(
                             chatId: groupId,
                             video: inputFile,
-                            caption: caption
+                            caption: caption,
+                            supportsStreaming: true
                         );
                     }
                     else if (IsAudio(extension))
