@@ -53,61 +53,98 @@ class Program
 
             Console.WriteLine($"[{count}/{files.Length}] Sending: {fileName} (Session: {sessionName})...");
 
-            try
-            {
-                using (var stream = System.IO.File.OpenRead(filePath))
-                {
-                    string extension = fileInfo.Extension.ToLowerInvariant();
-                    var inputFile = InputFile.FromStream(stream, fileName);
+            string extension = fileInfo.Extension.ToLowerInvariant();
+            int maxRetries = 20;
 
-                    if (IsImage(extension))
+            for (int attempt = 1; attempt <= maxRetries + 1; attempt++)
+            {
+                try
+                {
+                    using (var stream = System.IO.File.OpenRead(filePath))
                     {
-                        await botClient.SendPhoto(
-                            chatId: groupId,
-                            photo: inputFile,
-                            caption: caption
-                        );
+                        var inputFile = InputFile.FromStream(stream, fileName);
+
+                        if (IsImage(extension))
+                        {
+                            await botClient.SendPhoto(
+                                chatId: groupId,
+                                photo: inputFile,
+                                caption: caption
+                            );
+                        }
+                        else if (IsAnimation(extension))
+                        {
+                            await botClient.SendAnimation(
+                                chatId: groupId,
+                                animation: inputFile,
+                                caption: caption
+                            );
+                        }
+                        else if (IsVideo(extension))
+                        {
+                            await botClient.SendVideo(
+                                chatId: groupId,
+                                video: inputFile,
+                                caption: caption,
+                                supportsStreaming: true
+                            );
+                        }
+                        else if (IsAudio(extension))
+                        {
+                            await botClient.SendAudio(
+                                chatId: groupId,
+                                audio: inputFile,
+                                caption: caption
+                            );
+                        }
+                        else
+                        {
+                            // Using InputFile.FromStream for modern Telegram.Bot versions
+                            await botClient.SendDocument(
+                                chatId: groupId,
+                                document: inputFile,
+                                caption: caption
+                            );
+                        }
                     }
-                    else if (IsAnimation(extension))
+                    Console.WriteLine("Sent successfully.");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Attempt {attempt} failed: {ex.Message}");
+                    if (attempt <= maxRetries)
                     {
-                        await botClient.SendAnimation(
-                            chatId: groupId,
-                            animation: inputFile,
-                            caption: caption
-                        );
+                        Console.WriteLine("Retrying in 2 seconds...");
+                        Thread.Sleep(2000);
                     }
                     else if (IsVideo(extension))
                     {
-                        await botClient.SendVideo(
-                            chatId: groupId,
-                            video: inputFile,
-                            caption: caption,
-                            supportsStreaming: true
-                        );
-                    }
-                    else if (IsAudio(extension))
-                    {
-                        await botClient.SendAudio(
-                            chatId: groupId,
-                            audio: inputFile,
-                            caption: caption
-                        );
+                        Console.WriteLine("Max retries reached for video. Attempting to send without streaming...");
+                        try
+                        {
+                            using (var stream = System.IO.File.OpenRead(filePath))
+                            {
+                                var inputFile = InputFile.FromStream(stream, fileName);
+                                await botClient.SendVideo(
+                                    chatId: groupId,
+                                    video: inputFile,
+                                    caption: caption,
+                                    supportsStreaming: false
+                                );
+                            }
+                            Console.WriteLine("Sent successfully (without streaming).");
+                        }
+                        catch (Exception ex2)
+                        {
+                            Console.WriteLine($"Failed to send video without streaming: {ex2.Message}");
+                        }
                     }
                     else
                     {
-                        // Using InputFile.FromStream for modern Telegram.Bot versions
-                        await botClient.SendDocument(
-                            chatId: groupId,
-                            document: inputFile,
-                            caption: caption
-                        );
+                        Console.WriteLine($"Error sending file: {ex.Message}");
                     }
                 }
-                Console.WriteLine("Sent successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error sending file: {ex.Message}");
             }
 
             // Rate limiting: 1.5 seconds
